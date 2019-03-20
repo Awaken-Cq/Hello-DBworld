@@ -241,10 +241,9 @@ from dual;
 
 
 select e.employee_id, e.first_name, e.salary, d.department_id, d.department_name
-from employees e, (select department_id,avg(salary)
+from employees e, (select employee_id, department_id
                             from employees
-                            group by department_id
-                            having avg(salary) > (select avg(salary)
+                            where salary > (select avg(salary)
                                                             from employees
                                                             where department_id = 20))ad, departments d
 where e.department_id = ad.department_id 
