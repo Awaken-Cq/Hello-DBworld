@@ -1,0 +1,125 @@
+1--모든사원의 사번, 이름, 부서이름 ,부서번호 , 상관사번, 상관이름 , 상관부서번호, 상관부서이름
+--null : 사원없음, 사장 , 대기발령  
+--Join 을 이용하여 출력
+select e.employee_id, nvl(e.first_name,'사원없음') , nvl(d.department_name, '대기발령'),d.department_id ,ee.employee_id, nvl(ee.first_name,'사장'),dd.department_id , nvl(dd.department_name,'대기발령')
+from employees e
+left outer join employees ee
+on e.manager_id = ee.employee_id
+full outer join departments d
+on e.department_id = d.department_id
+full outer  join departments dd
+on ee.department_id = dd.department_id;
+
+
+2--
+--모든 사원의 이름 부서이름 도시이름, 국가이름
+
+
+select e.employee_id, nvl(e.first_name,'사원없음'), d.department_name, l.city, r.region_name, e.department_id
+from employees e , departments d , locations l , countries c , regions r
+where e.department_id = d.department_id(+)
+and d.location_id = l. location_id(+)
+and l.country_id = c.country_id(+)
+and c.region_id = r.region_id(+);
+
+
+
+
+--안병욱
+
+
+1. 한번도 직책이 변경된 적이 없는 사람의 사번과 이름 출력
+select
+    emp.employee_id as 사번
+    , emp.first_name as 이름
+from
+    employees emp
+    left outer join job_history jobh
+        on emp.employee_id = jobh.employee_id
+where
+    jobh.employee_id is null
+order by emp.employee_id
+;
+
+
+2. 퇴직자사번, 퇴직일자 찾기
+-- 직책이 변경된 이력은 있지만 현재 사원테이블에는 없는 사람을 퇴직한 사람이라 하고, 직책이 끝난날을 퇴직일이라 한다.
+select
+    jobh.employee_id as 사번
+    , jobh.end_date as 퇴직일
+from
+    employees emp
+    right outer join job_history jobh
+        on emp.employee_id = jobh.employee_id
+where
+    emp.employee_id is null
+order by emp.employee_id
+;
+
+
+-- 권범준
+
+
+-- 모든 부서 모든 사원 근무하는 사원의 사번, 이름(사원 없음), 부서번호, 부서이름, 부서, 도시이름(seattle) (ansi 사용하기)(소문자만 사용)
+
+
+select e.employee_id, nvl(e.first_name, '사원없음'), d.department_id, nvl(d.department_name, '대기발령'), l.city
+from employees e full outer join departments d
+    on e.department_id = d.department_id
+    join locations l
+    on d.location_id = l.location_id
+where upper(l.city) = upper('seattle');
+
+
+-- 상식문제
+
+
+맞는것은?
+
+
+1.join 바로 뒤에 on, where 둘다 사용 가능하다.
+2.natural join은 컬럼이 달라도 자동으로 조인된다.
+3.(+)는 기준에 상관 없이 항상 아무곳에 들어가면 안된다.
+
+
+-송현우 02.27
+1999년 1월 1일 이후에 입사한 사원번호, 사원명, 부서번호, 부서명 (ansi join)
+
+
+SELECT e.employee_id, e.first_name, d.department_id, d.department_name
+FROM employees e INNER JOIN departments d
+ON e.department_id = d. department_id 
+WHERE e.hire_date >= TO_DATE('1999-01-01','YYYY-MM-DD');
+
+
+
+
+이재운
+1. -- 근무 지역이 미국인 사원들의 사번, 급여, 급여 등급, 상급자 번호
+         -- 해당 data가 없는 경우에는 '-1'으로 표시
+
+
+SELECT
+    E.employee_id,
+    E.salary,
+    JG.grade_level,
+    nvl(E.manager_id, -1)
+FROM
+    employees "E" JOIN departments "D" USING(department_id) JOIN locations "L" USING(location_id) JOIN job_grades "JG" ON (E.salary between JG.lowest_sal and JG.highest_sal)
+WHERE
+    lower(L.country_id) = lower('US');
+
+
+
+
+2. -- 급여 등급이 B, D, F 인 사원들의 이름, 급여, 근무 도시 (JOIN 키워드 사용)
+
+
+SELECT
+    E.first_name || ' ' || E.last_name "NAME",
+    E.salary,
+    L.city
+FROM
+    employees "E" JOIN departments "D" USING(department_id) JOIN locations "L" USING(location_id) JOIN job_grades "JG" ON (E.salary between JG.lowest_sal and JG.highest_sal) 
+WHERE
+     JG.grade_level in ('B', 'D', 'F');

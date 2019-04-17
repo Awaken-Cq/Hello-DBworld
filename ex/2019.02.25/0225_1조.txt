@@ -1,0 +1,119 @@
+
+
+1. 매니저 번호가 130미만은 초보  130이상 150이하는 중급 그외는 고급이다. 사번 이름 매니저번호를 오름차순으로 정리하라.
+
+select employee_id, first_name, manager_id,
+        case 
+        when manager_id < 130
+        then '초보'
+        when manager_id >= 130 and manager_id <= 150
+        then '중급'
+        else '고급'
+    end 매니저스킬
+from employees
+order by manager_id;
+
+
+2. 48,456,231.20451 + 30000을 변환함수를 이용하여 푸시오
+
+select '48,456,231.20451', to_number('48,456,231.20451','00,000,000.00000')+30000
+from dual;
+
+
+3. 명예퇴직자
+-- 시스템 현재날짜 기준 근속년 30이상 명예퇴직, 그외 보류
+-- 사번, 이름, 전화번호, 부서
+-- 명예퇴직자 기준 정렬
+select employee_id, first_name, phone_number,to_char(sysdate,'yyyy')- to_char(hire_date,'yyyy'),
+    case when to_char(sysdate,'yyyy')- to_char(hire_date,'yyyy')>= 30
+    then '명예퇴직'
+    else '보류'
+    end "명예퇴직자"
+from employees
+order by 명예퇴직자;
+
+4.-- 문제 2 ) 커미션포함급여가 4000 미만 상여금 10%
+-- 커미션포함급여가 10000 미만 상여금 7%
+-- 커미션포함급여가 20000 미만 상여금 5%
+-- 커미션포함급여가 20000 이상 상여금 2%
+-- 사번, 이름, 전화번호, 부서, 커미션포함급여(별칭 : 급여), 상여금포함급여(별칭 : 상여금)
+
+select employee_id 사번, first_name 이름, phone_number 전화번호, department_id 부서, salary+salary*nvl(commission_pct,0) 급여,
+case
+    when salary+ salary *nvl(commission_pct,0)  <4000 
+    then (salary +(salary *nvl(commission_pct,0))) *(1.1)
+    when salary+ salary *nvl(commission_pct,0)  <10000 
+    then (salary +(salary *nvl(commission_pct,0))) *(1.07)
+    when salary+ salary *nvl(commission_pct,0)  <20000 
+    then (salary +(salary *nvl(commission_pct,0))) *(1.05)
+    else (salary +(salary *nvl(commission_pct,0))) *(1.02)
+end "상여금 포함급여"
+from employees
+order by 급여;
+
+5. 오늘을 기준으로 근무년수를 구해라 
+--"(사원이름)의 근무년수는 (00)년 입니다."의 형식으로 출력하라 
+--concat함수 이용
+
+답) select concat(concat(concat(first_name,'의 근무년수는 '),to_number(to_char(sysdate,'yyyy'),'0000')-to_number(to_char(hire_date,'yyyy'),'0000')),'년 입니다.')
+from employees;
+
+
+
+6. 근무지발령   
+--job_id가 IT로 시작하면 '판교점발령'
+--         S           '강남점발령'
+-- 그 외                '홍대점발령'
+
+--사원번호, 이름, job_id 근무지발령을 출력하라
+
+답) select employee_id, first_name, job_id,
+        case 
+         when job_id like 'IT%'
+         then '판교점발령'
+         when job_id like 'S%'
+         then '강남점발령'
+          else '홍대점발령'
+           end 근무지발령
+from employees;
+
+7.--'hello oracle !!!'을  hello HELLO ,oracle ORACLE 로 분리시켜라.
+SELECT 'hello oracle !!!'
+            ,SUBSTR('hello oracle !!!',1,INSTR('hello oracle !!!', ' ')-1)"HELLO"
+            ,SUBSTR('hello oracle !!!',INSTR('hello oracle !!!', ' ')+1)"ORACLE"
+FROM DUAL
+;
+
+
+8.--사번이 140미만은 바보
+--사번이 180미만은 멍청이
+--사번이 180이상은 똥개
+--사번, 이름, 연봉, 똥멍청이로 출력
+SELECT EMPLOYEE_ID
+            ,FIRST_NAME
+            ,SALARY
+            ,CASE
+                WHEN EMPLOYEE_ID <140
+                THEN '바보'
+                WHEN EMPLOYEE_ID <180
+                THEN '멍청이'
+                ELSE '똥개'
+            END 똥멍청이
+FROM EMPLOYEES
+ORDER BY EMPLOYEE_ID DESC;
+
+
+9. 임금을 3자리(1000의자리) 에서 반올림하여 표현하시오
+-- 정답
+select round(salary,-4)
+from employees;
+
+10. 사원 전화 번호의 .을 -으로 바꿔 표시하시오.
+-- 정답 
+select phone_number,
+case when instr(phone_number, '.' ,5) = 7
+        then substr(phone_number,1,3 ) ||'-'|| substr(phone_number,5,2) ||'-'|| substr(phone_number,8,4)||'-' ||substr(phone_number,13)
+        when  instr(phone_number, '.' ,5) = 8
+        then substr(phone_number,1,3) ||'-'|| substr(phone_number,5,3) ||'-'|| substr(phone_number,9)
+        end "하이픈 표시"
+from employees;

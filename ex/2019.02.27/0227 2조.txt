@@ -1,0 +1,112 @@
+
+
+
+1.사번, 이름, 부서번호, 부서이름, 매니저번호, 비고
+--비고 : 매니저와 커미션이 둘 다 없으면 '퇴사자'라고 표시, 있으면 빈칸으로 두기 (case when then/ ansi 이용)
+select e.employee_id, e.first_name, d.department_name, e.manager_id,
+        case 
+        when e.manager_id is null and e.commission_pct is null
+        then '퇴사자'
+        else ' '
+        end 비고
+from employees e join departments d
+on e.department_id=d.department_id;
+
+
+2.--국가번호, 국가이름, 지역이름, 우편번호를 구해라(anti join/ using이용)
+select country_id, c.country_name, r.region_name, l.postal_code
+from countries c join regions r
+using(region_id)
+join locations l
+using(country_id);
+
+
+3.--직책 아이디가 'SA_REP'인 모든 사원의
+--사번, 이름,직책이름,부서이름
+--단, 부서가 없는 경우 '대기발령'으로 출력
+
+SELECT E.EMPLOYEE_ID,E.FIRST_NAME,J.JOB_ID,NVL(D.DEPARTMENT_NAME,'대기발령')
+FROM EMPLOYEES E,DEPARTMENTS D,JOBS J
+WHERE E.DEPARTMENT_ID = D.DEPARTMENT_ID(+)
+AND E.JOB_ID = J.JOB_ID
+AND UPPER(J.JOB_ID) = UPPER('SA_REP')
+;
+
+4.--모든 사원의 사번,이름,상관사번,상관이름, 부서이름
+--상관 사번이 없을 경우 상관 사번을 '없음'으로 출력하고 별칭을 상관번호
+--단 상관이 없을 경우 상관이름에 '본인'으로 출력하고 별칭을 담당자
+--단, 부서가 미지정일 경우 부서이름을 '대기발령중'출력
+SELECT E.EMPLOYEE_ID
+            ,E.FIRST_NAME
+            ,NVL(TO_CHAR(M.EMPLOYEE_ID,'9999'), '없음')"상관번호"
+            ,NVL(M.FIRST_NAME,'본인')"담당자"
+            ,NVL(D.DEPARTMENT_NAME,'대기발령중')
+FROM EMPLOYEES E
+            ,EMPLOYEES M
+            ,DEPARTMENTS D
+    WHERE E.MANAGER_ID=M.EMPLOYEE_ID(+)
+    AND E.DEPARTMENT_ID=D.DEPARTMENT_ID(+);
+
+
+5.-- 모든 사원의 사번, 이름, 부서이름, 근무지, 근무나라 를 구하시오
+
+select e.employee_id, e.first_name, d.department_name, l.city, c.country_name
+from employees e, departments d, locations l, countries c
+where e.department_id = d.department_id
+    and l.location_id = d.location_id
+    and l.country_id = c.country_id;
+    
+    
+    
+    
+6.-- 모든 사원, 부서, 나라의 사번, 이름, 부서이름, 근무지, 근무나라를 구하시오 (각각 별칭을 지정)
+-- 단, 부서가 없는 경우 '미정'
+-- 단, 부서는 있지만 근무자가 없는 경우 이름에 '근무자없음'
+-- 그외의 널 값은 '-'
+
+select nvl(to_char(e.employee_id), '-') "사번", nvl(e.first_name, '근무자없음') "이름", nvl(d.department_name, '미정') "부서이름", 
+       nvl(l.city, '-' ) "근무지", nvl(c.country_name, '-') "근무나라"
+from employees e full outer join departments d
+        on e.department_id = d.department_id
+    full outer join locations l
+        on l.location_id = d.location_id
+    full outer join countries c
+        on l.country_id = c.country_id;
+
+
+
+7.-- 각 부서 별 사원의 급여등급을 표시하시오
+-- 출력: 사원번호, 부서 이름, 사원 이름, 급여등급
+-- 답)
+
+
+
+
+8.-- 모든 사원의 사원 아이디, 부서이름 (null일 경우 미정) , 연봉에 커미션을 포함했을때의 값을 기준으로 한 연봉등급, 으로 표현하시오
+-- 출력:  사원 부서 아이디, 부서이름, 연봉등급 
+-- 답)
+select e.employee_id 부서아이디 , e.first_name 사원이름, nvl(d.department_name,'미정') 부서이름, jg.grade_level 연봉등급
+from  job_grades jg join employees e 
+on jg.lowest_sal < (e.salary* e.commission_pct) 
+and jg.highest_sal >(e.salary* e.commission_pct)
+left outer join departments d
+on e.department_id= d.department_id; 
+
+
+
+9.--us에 사는 모든사원의 사번 이름 부서번호 부서이름 나라이름을 쓰시오(ansi 조인을 쓰시오)
+select e.employee_id, e.first_name, d.department_id, d.department_name, l.country_id
+from employees e join departments d
+on e.department_id = d.department_id
+join locations l
+on l.location_id = d.location_id
+where upper(l.country_id) = upper('us');
+
+
+10.--사원의 사번 이름 최고급여 최저급여를 non-equi를 이용하시오
+select e.employee_id, e.first_name, j.max_salary, j.min_salary
+from employees e, jobs j
+where e.salary <= j.max_salary
+and e.salary >= j.min_salary 
+and j.job_id = e.job_id
+order by salary;

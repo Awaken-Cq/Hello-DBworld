@@ -1,0 +1,181 @@
+** 답은 밑에 있습니다.
+
+1. 사원들의 grade_level 를 구하시오.
+   사번, 이름, 급여, grade_level (정렬은 사번)
+
+
+
+2. 직책이 변경된 적이 있는 사람들(job_historys 에 이력이 있는 사람)의 
+   사번, 이름, 이전직책코드, 이전직책명, 현재직책코드, 현재직책명을 표시
+   (정렬기준은 사번)
+
+
+3. 한사람을 찾아라.
+- 그 사람은 3000 ~ 4500 사이의 급여를 받을 수 있는 직책을 가지고 있다.
+- 그 사람이 일하는 부서명은 Administration 이다.
+- 그 사람의 사번, 이름, 급여, 부서명 표시
+
+
+
+4. 'europe'에 근무하는 사원 이름 부서이름 도시이름
+
+
+
+5. 사번이 100~150번인 사원의근무 이력
+   사번, 이름, 직책이름, 부서이름,  근무개월
+
+
+
+
+6. 'canada'에서 근무하는 사원들의 매니져들의 급여평균을 구하시오.
+
+
+
+
+7. first_name에 e가 들어가는 사원들의 매니져들 중에서 급여가 10000이상인 사람들의 급여 합계를 구하시오
+
+
+
+
+8. 'Europe' 에 근무하는 사람들 이름, 연봉
+
+
+
+
+9. 급여가 10000이상이고 부서번호가 110인 사원의 이름, 직책이름
+
+
+
+10. 급여 등급이 B, D, F 인 사원들의 이름, 급여, 근무 도시
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+1. 
+select 
+    emp.employee_id as 사번
+    , emp.first_name as 이름
+    , emp.salary as 급여
+    , jg.grade_level
+    --,emp.*
+    --, jg.*
+from
+    employees emp
+    , job_grades jg
+where
+    emp.salary between jg.lowest_sal and jg.highest_sal
+order by emp.employee_id
+;
+
+
+2.
+select
+    emp.employee_id as 사번
+    , emp.first_name as 성
+    , emp.last_name as 이름
+    , jobh.job_id as 이전직책
+    , preJob.job_title as 이전직책명
+    , emp.job_id as 현재직책코드
+    , nowJob.job_title as 현재직책명
+    --, emp.*
+from
+    job_history jobh
+    , employees emp
+    , jobs preJob
+    , jobs nowJob
+where 
+    jobh.employee_id = emp.employee_id
+    and jobh.job_id = preJob.job_id 
+    and emp.job_id = nowJob.job_id 
+order by jobh.employee_id
+;
+
+
+3.
+select
+    emp.employee_id as 사번
+    , emp.first_name as 이름
+    , emp.salary as 급여
+    , dep.department_name as 부서명
+from
+    jobs job
+    , employees emp
+    , departments dep
+where
+    job.min_salary <= 3000 and job.max_salary >= 4500
+    and emp.job_id = job.job_id
+    and emp.department_id = dep.department_id
+    and lower(dep.department_name) = lower('Administration')
+;
+
+
+4.
+select employee_id, first_name, department_name, city, region_name
+from employees e, departments d, locations l , countries c , regions g
+where e.department_id = d.department_id 
+and c.country_id = l.country_id
+and d.location_id = l.location_id 
+and c.region_id = g.region_id
+and lower(g.region_name) = lower('europe')
+order by employee_id;
+
+
+5.
+select e.employee_id, e.first_name, j.job_title , department_name, to_char(months_between(end_date, jh.start_date), '999.99')
+from employees e, job_history jh, jobs j, departments d
+where e.employee_id = jh.employee_id
+and jh.job_id = j.job_id
+and jh.department_id = d.department_id
+and jh.employee_id = between 100 and 150;
+
+
+6.
+SELECT avg(m.salary) "급여평균"
+FROM countries c, locations l, departments d, employees e, employees m
+WHERE lower(c.country_name) = lower('canada')
+and c.country_id = l.country_id
+and l.location_id = d.location_id
+and d.department_id = e.department_id
+and e.manager_id = m.employee_id;
+
+
+7.
+SELECT sum(m.salary)
+FROM employees e, employees m
+WHERE e.first_name like '%e%'
+and e.manager_id = m.employee_id
+and m.salary >= 10000;
+
+
+8.
+Select E. First_Name, D. Department_Name, L. City, E.Salary
+From Employees E, Regions R, Locations L, Countries C, Departments D
+Where R. Region_id = C. Region_id
+    and C. Country_id = L. Country_id
+    and L. Location_id = D. Location_id
+    and D. Department_id = E. Department_id
+    and lower(R. Region_Name) = lower('Europe');
+
+
+9.
+ Select E. First_Name, J.Job_Title, E. Salary 
+From Employees E, Jobs J, Departments D
+Where D. Department_Id = E. Department_Id
+    and J. Job_id = E. Job_id
+    and Salary >= 10000
+    and E. Department_id in (110);
+
+
+
+10.
+SELECT
+    E.first_name || ' ' || E.last_name "NAME",
+    E.salary,
+    L.city
+FROM
+    employees "E", departments "D", locations "L", job_grades "JG"
+WHERE
+    (E.department_id = D.department_id) and (D.location_id = L.location_id) 
+    and (E.salary between JG.lowest_sal and JG.highest_sal) and (JG.grade_level in ('B', 'D', 'F'));
